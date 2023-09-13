@@ -54,7 +54,7 @@ app.post("/inputUsers", async (req, res) => {
 
       try {
         await conect.query(
-          "INSERT INTO usuarios (correo, nombre, genero, fecha_nacimiento, cargo, fecha_ingreso, area_id, subarea_id, criticidad, monitor, administrador, adminglobal) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+          "INSERT INTO usuarios (correo, nombre, genero, fecha_nacimiento, cargo, fecha_ingreso, area_id, subarea_id, criticidad, monitor, administrador, adminglobal) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (correo) DO UPDATE SET nombre = excluded.nombre, genero = excluded.genero, fecha_nacimiento = excluded.fecha_nacimiento, cargo = excluded.cargo, fecha_ingreso = excluded.fecha_ingreso, area_id = excluded.area_id, subarea_id = excluded.subarea_id, criticidad = excluded.criticidad, monitor = excluded.monitor, administrador = excluded.administrador, adminglobal = excluded.adminglobal",
           [
             correo,
             nombre,
