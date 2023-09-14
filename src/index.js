@@ -2,8 +2,6 @@ const express = require("express");
 const morgan = require("morgan");
 const database = require("./database");
 const cors = require("cors");
-const bodyParse = require("body-parser");
-const bodyParser = require("body-parser");
 
 const app = express();
 app.set("port", 4000);
@@ -18,8 +16,6 @@ app.use(
 );
 app.use(morgan("dev"));
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 //Rutas
 app.get("/usersTable", async (req, res) => {
@@ -85,5 +81,51 @@ app.post("/inputUsers", async (req, res) => {
   } else {
     res.status(500).json("error!");
     console.log("Ningun usuario ha sido registrado");
+  }
+});
+
+app.delete("/deleteUsers", async (req, res) => {
+  try {
+    const gConect = await database.getConnection();
+    const userDataArray = req.body;
+
+    if (!Array.isArray(userDataArray) || userDataArray.length === 0) {
+      return res.status(400).json({
+        error: "El cuerpo de la solicitud debe ser un array no vacío",
+      });
+    }
+
+    const deletedUsers = [];
+
+    for (const userData of userDataArray) {
+      const { correo } = userData;
+
+      if (!correo) {
+        console.error("Usuario sin correo:", userData);
+        continue;
+      }
+
+      const result = await gConect.query(
+        "DELETE FROM usuarios WHERE correo = $1 RETURNING *",
+        [correo]
+      );
+
+      if (result.rowCount === 0) {
+        console.warn(`No se encontró ningún usuario con correo: ${correo}`);
+      } else {
+        deletedUsers.push(result.rows[0]);
+      }
+    }
+
+    if (deletedUsers.length > 0) {
+      res
+        .status(200)
+        .json({ message: "Usuarios eliminados correctamente", deletedUsers });
+    } else {
+      res.status(404).json({ error: "Ningún usuario fue eliminado" });
+    }
+  } catch (error) {
+    console.error("Error al eliminar usuarios:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
